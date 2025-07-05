@@ -1,0 +1,40 @@
+name: Docker Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Reposuyu klonla
+        uses: actions/checkout@v4
+
+      - name: Python kurulumu
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Bağımlılıkları kur
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Testleri çalıştır
+        run: pytest
+
+      - name: Docker’a login ol
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Docker image oluştur
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/flask-app:latest .
+
+      - name: Docker image’ı Docker Hub’a gönder
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/flask-app:latest
